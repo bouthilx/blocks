@@ -367,11 +367,16 @@ class SimpleExtension(TrainingExtension):
 
 class FinishAfter(SimpleExtension):
     """Finishes the training process when triggered."""
-    def __init__(self, **kwargs):
+    def __init__(self, after_n_epochs, **kwargs):
+        kwargs.setdefault("before_training", True)
         super(FinishAfter, self).__init__(**kwargs)
 
+        self.after_n_epochs = after_n_epochs
+
     def do(self, which_callback, *args):
-        self.main_loop.log.current_row['training_finish_requested'] = True
+        log = self.main_loop.log
+        log.current_row['training_finish_requested'] = \
+            log.status["epochs_done"] >= self.after_n_epochs
 
 
 class Printing(SimpleExtension):

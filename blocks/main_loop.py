@@ -171,14 +171,16 @@ class MainLoop(object):
                     with Timer('initialization', self.profile):
                         self.algorithm.initialize()
                     self.status['training_started'] = True
+
                 # We can not write "else:" here because extensions
                 # called "before_training" could have changed the status
                 # of the main loop.
                 if self.log.status['iterations_done'] > 0:
                     self.log.resume()
-                    self._run_extensions('on_resumption')
                     self.status['epoch_interrupt_received'] = False
                     self.status['batch_interrupt_received'] = False
+                    self._run_extensions('on_resumption')
+                    self._check_finish_training('batch')
                 with Timer('training', self.profile):
                     while self._run_epoch():
                         pass
