@@ -131,6 +131,7 @@ except ImportError:
 from blocks.config import config
 from blocks.filter import get_brick
 from blocks.utils import change_recursion_limit
+from blocks.misc import pkl_utils
 
 
 BRICK_DELIMITER = '|'
@@ -277,9 +278,15 @@ def load_parameters(file_):
     A dictionary of (parameter name, numpy array) pairs.
 
     """
-    with closing(_load_parameters_npzfile(file_)) as npz_file:
-        return {name.replace(BRICK_DELIMITER, '/'): value
-                for name, value in npz_file.items()}
+    main_loop = pkl_utils.load(file_)
+    param_values = {key: shared_variable.get_value()
+                    for key, shared_variable
+                    in main_loop.model.get_parameter_dict().iteritems()}
+
+    # with closing(_load_parameters_npzfile(file_)) as npz_file:
+    #     return {name.replace(BRICK_DELIMITER, '/'): value
+    #             for name, value in npz_file.items()}
+    return param_values
 
 
 def add_to_dump(object_, file_, name, parameters=None, use_cpickle=False,
@@ -608,3 +615,4 @@ def _load_parameters_npzfile(file_):
     with tarfile.open(fileobj=file_, mode='r') as tar_file:
         return numpy.load(
             tar_file.extractfile(tar_file.getmember('_parameters')))
+
