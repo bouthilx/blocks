@@ -369,6 +369,7 @@ class FinishAfter(SimpleExtension):
     """Finishes the training process when triggered."""
     def __init__(self, after_n_epochs, **kwargs):
         kwargs.setdefault("before_training", True)
+        kwargs.setdefault("after_epoch", True)
         super(FinishAfter, self).__init__(**kwargs)
 
         self.after_n_epochs = after_n_epochs
