@@ -366,18 +366,44 @@ class SimpleExtension(TrainingExtension):
 
 
 class FinishAfter(SimpleExtension):
-    """Finishes the training process when triggered."""
-    def __init__(self, after_n_epochs, **kwargs):
-        kwargs.setdefault("before_training", True)
-        kwargs.setdefault("after_epoch", True)
-        super(FinishAfter, self).__init__(**kwargs)
+    """Finishes the training process when either after_n_epochs
+    of after_n_batches is reached.
+
+    Parameters
+    ----------
+    after_n_epochs : int
+        If specified, finishes after n epochs of training. Default is None.
+    after_n_batches : int
+        If specified, finishes after n batches of training. Default is None.
+
+    """
+    def __init__(self, after_n_epochs=None, after_n_batches=None):
+        if after_n_epochs is not None and after_n_batches is not None:
+            raise ValueError("Either after_n_epochs or after_n_batches should "
+                             "be given but not both.")
+
+        kwargs = dict(on_resumption=True)
+
+        if after_n_epochs is not None:
+            kwargs["after_epoch"] = True
+        if after_n_batches is not None:
+            kwargs["after_batch"] = True
 
         self.after_n_epochs = after_n_epochs
+        self.after_n_batches = after_n_batches
+
+        super(FinishAfter, self).__init__(**kwargs)
 
     def do(self, which_callback, *args):
         log = self.main_loop.log
-        log.current_row['training_finish_requested'] = \
-            log.status["epochs_done"] >= self.after_n_epochs
+
+        if self.after_n_epochs is not None:
+            log.current_row['training_finish_requested'] = \
+                log.status["epochs_done"] >= self.after_n_epochs
+
+        elif self.after_n_batches is not None:
+            log.current_row['training_finish_requested'] = \
+                log.status["iterations_done"] >= self.after_n_batches
 
 
 class Printing(SimpleExtension):
